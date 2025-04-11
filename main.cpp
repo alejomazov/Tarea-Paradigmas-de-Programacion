@@ -1,8 +1,11 @@
-
 #include <iostream>
 #include <string>
 #include "Examen.h"
 #include "Pregunta.h"
+#include "PreguntaVF.h"
+#include "PreguntaSM.h"
+#include "PreguntaRC.h" // Nueva clase para "Respuesta Corta"
+
 using namespace std;
 
 void mostrarMenu() {
@@ -17,7 +20,6 @@ void mostrarMenu() {
     cout << "8. Mostrar Preguntas" << endl;
     cout << "9. Salir" << endl;
     cout << "Elija una opción: ";
-    cout << "\n" << endl;
 }
 
 int main() {
@@ -41,7 +43,12 @@ int main() {
                 getline(cin, asignatura);
                 cout << "Cantidad de Preguntas: ";
                 cin >> cantidadPreguntas;
+                cin.ignore();
                 
+                // Liberar el examen anterior si existe para evitar fugas de memoria
+                if (examen) {
+                    delete examen;
+                }
                 examen = new Examen(nombre, asignatura, cantidadPreguntas);
                 break;
             }
@@ -51,20 +58,23 @@ int main() {
                     break;
                 }
                 
-                string tipo, enunciado, solucion;
-                int id=0, nivelBloom, tiempo, puntaje;
-                
+                string enunciado, solucion;
+                int nivelBloom, tiempo, puntaje;
                 int tipoPregunta;
+                
                 do {
-                    cout << "Tipo de Pregunta\n\n1=Verdadero/Falso\n2=Selección Multiple): ";
+                    cout << "Tipo de Pregunta:" << endl;
+                    cout << "1 = Verdadero/Falso" << endl;
+                    cout << "2 = Selección Múltiple" << endl;
+                    cout << "3 = Respuesta Corta" << endl;
+                    cout << "Elija una opción: ";
                     cin >> tipoPregunta;
                     cin.ignore();
-                } while (tipoPregunta != 1 && tipoPregunta != 2);
-                
-                tipo = (tipoPregunta == 1) ? "V" : "M";
+                } while (tipoPregunta < 1 || tipoPregunta > 3);
                 
                 cout << "Nivel de Taxonomía de Bloom (0-5): ";
                 cin >> nivelBloom;
+                cin.ignore();
                 
                 cout << "Tiempo Estimado (minutos): ";
                 cin >> tiempo;
@@ -78,8 +88,19 @@ int main() {
                 
                 cout << "Puntaje: ";
                 cin >> puntaje;
+                cin.ignore();
                 
-                Pregunta* nuevaPregunta = new Pregunta(id, tipo, nivelBloom, tiempo, enunciado, solucion, puntaje);
+                Pregunta* nuevaPregunta = nullptr;
+                if (tipoPregunta == 1) {
+                    nuevaPregunta = new PreguntaVF(nivelBloom, tiempo, enunciado, solucion, puntaje);
+                }
+                else if (tipoPregunta == 2) {
+                    nuevaPregunta = new PreguntaSM(nivelBloom, tiempo, enunciado, solucion, puntaje);
+                }
+                else if (tipoPregunta == 3) {
+                    nuevaPregunta = new PreguntaRC(nivelBloom, tiempo, enunciado, solucion, puntaje);
+                }
+                
                 examen->agregarPregunta(nuevaPregunta);
                 break;
             }
@@ -91,6 +112,7 @@ int main() {
                 int id;
                 cout << "ID de la pregunta a actualizar: ";
                 cin >> id;
+                cin.ignore();
                 examen->actualizarPregunta(id);
                 break;
             }
@@ -102,6 +124,7 @@ int main() {
                 int id;
                 cout << "ID de la pregunta a borrar: ";
                 cin >> id;
+                cin.ignore();
                 examen->borrarPregunta(id);
                 break;
             }
@@ -113,6 +136,7 @@ int main() {
                 int id;
                 cout << "ID de la pregunta a consultar: ";
                 cin >> id;
+                cin.ignore();
                 examen->consultarPregunta(id);
                 break;
             }
@@ -124,6 +148,7 @@ int main() {
                 int nivel;
                 cout << "Nivel de Bloom a filtrar (0-5): ";
                 cin >> nivel;
+                cin.ignore();
                 examen->filtrarPreguntas(nivel);
                 break;
             }
@@ -143,9 +168,16 @@ int main() {
                 examen->mostrarPreguntas();
                 break;
             }
+            case 9: {
+                break;
+            }
+            default: {
+                cout << "Opción inválida." << endl;
+                break;
+            }
         }
-    }
-    while (opcion != 9);
+    } while (opcion != 9);
+    
     delete examen;
     return 0;
 }
