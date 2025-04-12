@@ -1,10 +1,16 @@
 #include <iostream>
 #include <string>
+#include <limits>
 #include "Examen.h"
 #include "Pregunta.h"
 #include "PreguntaVF.h"
 #include "PreguntaSM.h"
-#include "PreguntaRC.h" // Nueva clase para "Respuesta Corta"
+#include "PreguntaRC.h"
+/* #include "Examen.cpp"
+#include "Pregunta.cpp"
+#include "PreguntaVF.cpp"
+#include "PreguntaSM.cpp"
+#include "PreguntaRC.cpp" */
 
 using namespace std;
 
@@ -30,7 +36,13 @@ int main() {
     do {
         mostrarMenu();
         cin >> opcion;
-        cin.ignore();
+        if (cin.fail()) {
+            cin.clear(); // Limpia el estado de error
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Limpia el buffer
+            cout << "Entrada inválida. Por favor, ingrese un número." << endl;
+            continue; // Vuelve al menú
+        }
+        //cin.ignore();
 
         switch(opcion) {
             case 1: {
