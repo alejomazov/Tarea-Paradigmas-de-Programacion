@@ -3,7 +3,7 @@
     "xstring": "cpp"
   },
   "code-runner.runInTerminal": true,
-"code-runner.executorMap": {
-  "cpp": "cd \"${fileDirname}\" && g++ main.cpp Examen.cpp Pregunta.cpp PreguntaRC.cpp PreguntaSM.cpp PreguntaVF.cpp -o main.exe && ./main.exe"
-}
+  "code-runner.executorMap": {
+    "cpp": "cd \"${fileDirname}\" && g++ main.cpp Examen.cpp Pregunta.cpp PreguntaRC.cpp PreguntaSM.cpp PreguntaVF.cpp -o main.exe && ./main.exe"
+  }
 }

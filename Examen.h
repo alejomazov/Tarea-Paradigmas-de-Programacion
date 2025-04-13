@@ -25,6 +25,16 @@ public:
     void setAsignatura(string _asignatura) { asignatura = _asignatura; }
     void setCantidadPreguntas(int _cantidad) { cantidadPreguntas = _cantidad; }
 
+    // Getter para numPreguntasActual
+    int getNumPreguntasActual() const {
+        return numPreguntasActual;
+    }
+
+    // Getter para acceder a la i-ésima pregunta
+    Pregunta *getPregunta(int i) const {
+        return preguntas[i];  
+    }
+
     // Métodos
     void agregarPregunta(Pregunta* pregunta);
     void actualizarPregunta(int id);

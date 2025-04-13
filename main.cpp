@@ -6,12 +6,16 @@
 #include "PreguntaVF.h"
 #include "PreguntaSM.h"
 #include "PreguntaRC.h"
+
+#include <fstream>
+#include "libs/json/json.hpp"
 /* #include "Examen.cpp"
 #include "Pregunta.cpp"
 #include "PreguntaVF.cpp"
 #include "PreguntaSM.cpp"
 #include "PreguntaRC.cpp" */
 
+using json = nlohmann::json;
 using namespace std;
 
 void mostrarMenu() {
@@ -28,6 +32,79 @@ void mostrarMenu() {
     cout << "Elija una opción: ";
 }
 
+// funciones extra para tomar y crear un archivo json
+json serializePregunta(const Pregunta* pregunta) {
+    json j;
+    j["id"] = pregunta->getId();
+    j["tipo"] = pregunta->getTipo();
+    j["nivelBloom"] = pregunta->getNivelBloom();
+    j["tiempoEstimado"] = pregunta->getTiempoEstimado();
+    j["enunciado"] = pregunta->getEnunciado();
+    j["solucion"] = pregunta->getSolucion();
+    j["puntaje"] = pregunta->getPuntaje();
+    return j;
+}
+
+
+json serializeExamen(const Examen &examen) {
+    json j;
+    j["nombre"] = examen.getNombre();
+    j["asignatura"] = examen.getAsignatura();
+    j["cantidadPreguntas"] = examen.getCantidadPreguntas();
+    j["numPreguntasActual"] = examen.getNumPreguntasActual();
+
+    // Creamos un arreglo JSON para las preguntas
+    json jPreguntas = json::array();
+    for (int i = 0; i < examen.getNumPreguntasActual(); i++) {
+        // Obtenemos cada pregunta usando el getter que agregamos
+        Pregunta* p = examen.getPregunta(i);
+        jPreguntas.push_back( serializePregunta(p) );
+    }
+    j["preguntas"] = jPreguntas;
+    
+    return j;
+}
+
+
+void guardarExamenEnArchivo(const Examen &examen, const std::string &nombreArchivo = "examenes.json") {
+    json jExamenes; 
+    std::ifstream inFile(nombreArchivo);
+    
+    // Si el archivo existe, se lee el contenido (se espera que sea un arreglo).
+    if (inFile.is_open()) {
+        try {
+            inFile >> jExamenes;
+            if (!jExamenes.is_array()) {
+                // Si el contenido no es un arreglo, lo forzamos a ser un arreglo.
+                jExamenes = json::array();
+            }
+        } catch (const json::parse_error &e) {
+            // Si ocurre un error al parsear, inicializamos un arreglo vacío.
+            jExamenes = json::array();
+        }
+        inFile.close();
+    } else {
+        // Si el archivo no existe, inicializamos el arreglo vacío.
+        jExamenes = json::array();
+    }
+    
+    // Serializamos el examen y lo agregamos al arreglo.
+    json nuevoExamen = serializeExamen(examen);
+    jExamenes.push_back(nuevoExamen);
+    
+    // Abrimos (o creamos) el archivo en modo de escritura para sobrescribir.
+    std::ofstream outFile(nombreArchivo);
+    if (outFile.is_open()) {
+        // Se guarda el JSON con una identación de 4 espacios para mayor legibilidad.
+        outFile << jExamenes.dump(4);
+        outFile.close();
+        cout << "Examen guardado correctamente en " << nombreArchivo << endl;
+    } else {
+        cerr << "Error al abrir el archivo para escribir." << endl;
+    }
+}
+
+
 int main() {
     Examen* examen = nullptr;
     int opcion;
@@ -35,17 +112,23 @@ int main() {
 
     do {
         mostrarMenu();
-        cin >> opcion;
-        if (cin.fail()) {
+        // cin >> opcion;
+        while (!(std::cin >> opcion) || (opcion < 1 || opcion > 9)) {
+            std::cin.clear(); 
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Ingreso no válido. Ingrese un número entre 1 y 9: ";
+        }
+
+        /* if (cin.fail()) {
             cin.clear(); // Limpia el estado de error
             cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Limpia el buffer
             cout << "Entrada inválida. Por favor, ingrese un número." << endl;
             continue; // Vuelve al menú
-        }
+        } */
         //cin.ignore();
 
         switch(opcion) {
-            case 1: {
+            case 1: { // crear examen
                 string nombre, asignatura;
                 int cantidadPreguntas;
                 
@@ -62,9 +145,12 @@ int main() {
                     delete examen;
                 }
                 examen = new Examen(nombre, asignatura, cantidadPreguntas);
+                if (examen != nullptr) {
+                    guardarExamenEnArchivo(*examen);
+                }
                 break;
             }
-            case 2: {
+            case 2: { // añadir pregunta
                 if (!examen) {
                     cout << "Primero cree un examen." << endl;
                     break;
@@ -116,7 +202,7 @@ int main() {
                 examen->agregarPregunta(nuevaPregunta);
                 break;
             }
-            case 3: {
+            case 3: { // actualizar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -126,13 +212,24 @@ int main() {
                 cin >> id;
                 cin.ignore();
                 examen->actualizarPregunta(id);
+                if (examen != nullptr) {
+                    guardarExamenEnArchivo(*examen);
+                }
                 break;
             }
-            case 4: {
+            case 4: { // borrar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
                 }
+                char confirmacion;
+                std::cout << "¿Está seguro de que desea borrar el ítem? (S/N): ";
+                std::cin >> confirmacion;
+                if (toupper(confirmacion) != 'S') {
+                    std::cout << "Operación cancelada.\n";
+                    break;
+                }
+
                 int id;
                 cout << "ID de la pregunta a borrar: ";
                 cin >> id;
@@ -140,7 +237,7 @@ int main() {
                 examen->borrarPregunta(id);
                 break;
             }
-            case 5: {
+            case 5: { // consultar informacion pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -152,7 +249,7 @@ int main() {
                 examen->consultarPregunta(id);
                 break;
             }
-            case 6: {
+            case 6: { // filtrar evaluacion
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -164,7 +261,7 @@ int main() {
                 examen->filtrarPreguntas(nivel);
                 break;
             }
-            case 7: {
+            case 7: { // mostrar evaluacion
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -172,7 +269,7 @@ int main() {
                 examen->mostrarExamen();
                 break;
             }
-            case 8: {
+            case 8: { // mostrar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;

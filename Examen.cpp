@@ -1,4 +1,3 @@
-
 #include "Examen.h"
 #include <iostream>
 
@@ -27,12 +26,17 @@ void Examen::actualizarPregunta(int id) {
             
             int tipoPregunta;
             do {
-                cout << "Tipo de Pregunta (1=Verdadero/Falso, 2=Selección Multiple): ";
+                cout << "Tipo de Pregunta (1=Verdadero/Falso, 2=Selección Multiple, 3=Respuesta Corta): ";
                 cin >> tipoPregunta;
                 cin.ignore();
-            } while (tipoPregunta != 1 && tipoPregunta != 2);
+            } while (tipoPregunta != 1 && tipoPregunta != 2 && tipoPregunta != 3);
             
-            tipo = (tipoPregunta == 1) ? "V" : "M";
+            if (tipoPregunta == 1)
+                tipo = "V"; // Verdadero/Falso
+            else if (tipoPregunta == 2)
+                tipo = "M"; // Selección Multiple
+            else if (tipoPregunta == 3)
+                tipo = "R"; // Respuesta Corta
             
             cout << "Nivel de Taxonomía de Bloom (0-5): ";
             cin >> nivelBloom;
@@ -50,8 +54,14 @@ void Examen::actualizarPregunta(int id) {
             cout << "Puntaje: ";
             cin >> puntaje;
 
-            delete preguntas[i];
-            preguntas[i] = new Pregunta(id, tipo, nivelBloom, tiempo, enunciado, solucion, puntaje);
+            //delete preguntas[i];
+            //preguntas[i] = new Pregunta(id, tipo, nivelBloom, tiempo, enunciado, solucion, puntaje);
+            preguntas[i]->setTipo(tipo);
+            preguntas[i]->setNivelBloom(nivelBloom);
+            preguntas[i]->setTiempoEstimado(tiempo);
+            preguntas[i]->setEnunciado(enunciado);
+            preguntas[i]->setSolucion(solucion);
+            preguntas[i]->setPuntaje(puntaje);
             return;
         }
     }
