@@ -140,7 +140,7 @@ Examen* cargarExamenDesdeJSON(const std::string &nombreArchivo = "examenes.json"
     cin >> opcion;
     cin.ignore();
 
-    if (opcion < 1 || opcion > jExamenes.size()) {
+    if (opcion < 1 || opcion > static_cast<int>(jExamenes.size())) {
         cout << "Opción inválida." << endl;
         return nullptr;
     }
@@ -149,31 +149,35 @@ Examen* cargarExamenDesdeJSON(const std::string &nombreArchivo = "examenes.json"
     string nombre = examenJSON["nombre"];
     string asignatura = examenJSON["asignatura"];
     int cantidadPreguntas = examenJSON["cantidadPreguntas"];
-    // int numPreguntasActual = examenJSON["numPreguntasActual"];
 
+    // Creamos el objeto Examen con los datos básicos.
     Examen* examen = new Examen(nombre, asignatura, cantidadPreguntas);
 
-    for (const auto& p : examenJSON["preguntas"]) {
-        string tipo = p["tipo"];
-        int nivel = p["nivelBloom"];
-        int tiempo = p["tiempoEstimado"];
-        string enunciado = p["enunciado"];
-        string solucion = p["solucion"];
-        int puntaje = p["puntaje"];
+    // Verificamos si existe la propiedad "preguntas" y es un arreglo.
+    if (examenJSON.contains("preguntas") && examenJSON["preguntas"].is_array()) {
+        for (const auto &p : examenJSON["preguntas"]) {
+            string tipo = p["tipo"];
+            int nivel = p["nivelBloom"];
+            int tiempo = p["tiempoEstimado"];
+            string enunciado = p["enunciado"];
+            string solucion = p["solucion"];
+            int puntaje = p["puntaje"];
 
-        Pregunta* pregunta = nullptr;
+            Pregunta* pregunta = nullptr;
+            if (tipo == "V") {
+                pregunta = new PreguntaVF(nivel, tiempo, enunciado, solucion, puntaje);
+            } else if (tipo == "M") {
+                pregunta = new PreguntaSM(nivel, tiempo, enunciado, solucion, puntaje);
+            } else if (tipo == "R") {
+                pregunta = new PreguntaRC(nivel, tiempo, enunciado, solucion, puntaje);
+            }
 
-        if (tipo == "V") {
-            pregunta = new PreguntaVF(nivel, tiempo, enunciado, solucion, puntaje);
-        } else if (tipo =="M") {
-            pregunta = new PreguntaSM(nivel, tiempo, enunciado, solucion, puntaje);
-        } else if (tipo == "R") {
-            pregunta = new PreguntaRC(nivel, tiempo, enunciado, solucion, puntaje);
+            if (pregunta) {
+                examen->agregarPregunta(pregunta);
+            }
         }
-
-        if (pregunta) {
-            examen->agregarPregunta(pregunta);
-        }
+    } else {
+        cout << "El examen seleccionado no contiene preguntas guardadas." << endl;
     }
 
     return examen;
