@@ -70,38 +70,65 @@ void guardarExamenEnArchivo(const Examen &examen, const std::string &nombreArchi
     json jExamenes; 
     std::ifstream inFile(nombreArchivo);
     
-    // Si el archivo existe, se lee el contenido (se espera que sea un arreglo).
+    // Si el archivo existe, leemos su contenido.
     if (inFile.is_open()) {
         try {
-            inFile >> jExamenes;
+            inFile >> jExamenes;  // Se espera que jExamenes sea un arreglo
             if (!jExamenes.is_array()) {
-                // Si el contenido no es un arreglo, lo forzamos a ser un arreglo.
+                // Si no lo es, lo reiniciamos como un arreglo vacío
                 jExamenes = json::array();
             }
         } catch (const json::parse_error &e) {
-            // Si ocurre un error al parsear, inicializamos un arreglo vacío.
+            // Si ocurre un error al parsear (archivo corrupto, por ejemplo), inicializamos un arreglo vacío.
             jExamenes = json::array();
         }
         inFile.close();
     } else {
-        // Si el archivo no existe, inicializamos el arreglo vacío.
+        // Si el archivo no existe, lo iniciamos como arreglo vacío.
         jExamenes = json::array();
     }
     
-    // Serializamos el examen y lo agregamos al arreglo.
+    // Serializamos el examen nuevo.
     json nuevoExamen = serializeExamen(examen);
+    // Agregamos el examen nuevo al arreglo que ya se leyó (o que se creó vacío).
     jExamenes.push_back(nuevoExamen);
     
-    // Abrimos (o creamos) el archivo en modo de escritura para sobrescribir.
+    // Abrimos el archivo en modo escritura (esto sobrescribe lo anterior)
     std::ofstream outFile(nombreArchivo);
     if (outFile.is_open()) {
-        // Se guarda el JSON con una identación de 4 espacios para mayor legibilidad.
+        // Guardamos el JSON con indentación para facilitar la lectura.
         outFile << jExamenes.dump(4);
         outFile.close();
         cout << "Examen guardado correctamente en " << nombreArchivo << endl;
     } else {
         cerr << "Error al abrir el archivo para escribir." << endl;
     }
+}
+
+
+json leerExamenesDesdeArchivo(const std::string &nombreArchivo = "examenes.json") {
+    json jExamenes;
+    std::ifstream inFile(nombreArchivo);
+    if (inFile.is_open()) {
+        try {
+            inFile >> jExamenes;
+            if (!jExamenes.is_array()) {
+                jExamenes = json::array();
+            }
+        } catch (const json::parse_error &e) {
+            jExamenes = json::array();
+        }
+        inFile.close();
+    } else {
+        // Si no existe el archivo, retornamos un arreglo vacío.
+        jExamenes = json::array();
+    }
+    return jExamenes;
+}
+
+void mostrarExamenesGuardados(const std::string &nombreArchivo = "examenes.json") {
+    json jExamenes = leerExamenesDesdeArchivo(nombreArchivo);
+    cout << "Exámenes guardados en " << nombreArchivo << ":\n" << jExamenes.dump(4) << endl;
 }
 
 
