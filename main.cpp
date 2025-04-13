@@ -21,14 +21,15 @@ using namespace std;
 void mostrarMenu() {
     cout << "\n=== MENÚ ===" << endl;
     cout << "1. Crear Examen" << endl;
-    cout << "2. Añadir Pregunta" << endl;
-    cout << "3. Actualizar Pregunta" << endl;
-    cout << "4. Borrar Pregunta" << endl;
-    cout << "5. Consultar Info Pregunta" << endl;
-    cout << "6. Filtrar Pregunta" << endl;
-    cout << "7. Mostrar Evaluación" << endl;
-    cout << "8. Mostrar Preguntas" << endl;
-    cout << "9. Salir" << endl;
+    cout << "2. Cargar Examen desde archivo" << endl; 
+    cout << "3. Añadir Pregunta" << endl;
+    cout << "4. Actualizar Pregunta" << endl;
+    cout << "5. Borrar Pregunta" << endl;
+    cout << "6. Consultar Info Pregunta" << endl;
+    cout << "7. Filtrar Pregunta" << endl;
+    cout << "8. Mostrar Evaluación" << endl;
+    cout << "9. Mostrar Preguntas" << endl;
+    cout << "10. Salir" << endl;
     cout << "Elija una opción: ";
 }
 
@@ -126,6 +127,63 @@ json leerExamenesDesdeArchivo(const std::string &nombreArchivo = "examenes.json"
     return jExamenes;
 }
 
+Examen* cargarExamenDesdeJSON(const std::string &nombreArchivo = "examenes.json") {
+    json jExamenes = leerExamenesDesdeArchivo(nombreArchivo);
+
+    if (jExamenes.empty()) {
+        cout << "No hay exámenes guardados." << endl;
+        return nullptr;
+    }
+
+    cout << "Exámenes disponibles:" << endl;
+    for (size_t i = 0; i < jExamenes.size(); ++i) {
+        cout << i + 1 << ". " << jExamenes[i]["nombre"] << " - " << jExamenes[i]["asignatura"] << endl;
+    }
+
+    int opcion;
+    cout << "Seleccione el número del examen que desea cargar: ";
+    cin >> opcion;
+    cin.ignore();
+
+    if (opcion < 1 || opcion > jExamenes.size()) {
+        cout << "Opción inválida." << endl;
+        return nullptr;
+    }
+
+    json examenJSON = jExamenes[opcion - 1];
+    string nombre = examenJSON["nombre"];
+    string asignatura = examenJSON["asignatura"];
+    int cantidadPreguntas = examenJSON["cantidadPreguntas"];
+    // int numPreguntasActual = examenJSON["numPreguntasActual"];
+
+    Examen* examen = new Examen(nombre, asignatura, cantidadPreguntas);
+
+    for (const auto& p : examenJSON["preguntas"]) {
+        string tipo = p["tipo"];
+        int nivel = p["nivelBloom"];
+        int tiempo = p["tiempoEstimado"];
+        string enunciado = p["enunciado"];
+        string solucion = p["solucion"];
+        int puntaje = p["puntaje"];
+
+        Pregunta* pregunta = nullptr;
+
+        if (tipo == "V") {
+            pregunta = new PreguntaVF(nivel, tiempo, enunciado, solucion, puntaje);
+        } else if (tipo =="M") {
+            pregunta = new PreguntaSM(nivel, tiempo, enunciado, solucion, puntaje);
+        } else if (tipo == "R") {
+            pregunta = new PreguntaRC(nivel, tiempo, enunciado, solucion, puntaje);
+        }
+
+        if (pregunta) {
+            examen->agregarPregunta(pregunta);
+        }
+    }
+
+    return examen;
+}
+
 void mostrarExamenesGuardados(const std::string &nombreArchivo = "examenes.json") {
     json jExamenes = leerExamenesDesdeArchivo(nombreArchivo);
     cout << "Exámenes guardados en " << nombreArchivo << ":\n" << jExamenes.dump(4) << endl;
@@ -140,10 +198,10 @@ int main() {
     do {
         mostrarMenu();
         // cin >> opcion;
-        while (!(std::cin >> opcion) || (opcion < 1 || opcion > 9)) {
+        while (!(std::cin >> opcion) || (opcion < 1 || opcion > 10)) {
             std::cin.clear(); 
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Ingreso no válido. Ingrese un número entre 1 y 9: ";
+            std::cout << "Ingreso no válido. Ingrese un número entre 1 y 10: ";
         }
 
         /* if (cin.fail()) {
@@ -177,7 +235,17 @@ int main() {
                 }
                 break;
             }
-            case 2: { // añadir pregunta
+
+            case 2: { // cargar examen
+                if (examen) {
+                    delete examen;
+                    examen = nullptr;
+                }
+                examen = cargarExamenDesdeJSON();
+                break;
+            }
+            
+            case 3: { // añadir pregunta
                 if (!examen) {
                     cout << "Primero cree un examen." << endl;
                     break;
@@ -229,7 +297,7 @@ int main() {
                 examen->agregarPregunta(nuevaPregunta);
                 break;
             }
-            case 3: { // actualizar pregunta
+            case 4: { // actualizar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -244,7 +312,7 @@ int main() {
                 }
                 break;
             }
-            case 4: { // borrar pregunta
+            case 5: { // borrar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -264,7 +332,7 @@ int main() {
                 examen->borrarPregunta(id);
                 break;
             }
-            case 5: { // consultar informacion pregunta
+            case 6: { // consultar informacion pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -276,7 +344,7 @@ int main() {
                 examen->consultarPregunta(id);
                 break;
             }
-            case 6: { // filtrar evaluacion
+            case 7: { // filtrar evaluacion
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -288,7 +356,7 @@ int main() {
                 examen->filtrarPreguntas(nivel);
                 break;
             }
-            case 7: { // mostrar evaluacion
+            case 8: { // mostrar evaluacion
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -296,7 +364,7 @@ int main() {
                 examen->mostrarExamen();
                 break;
             }
-            case 8: { // mostrar pregunta
+            case 9: { // mostrar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -304,7 +372,7 @@ int main() {
                 examen->mostrarPreguntas();
                 break;
             }
-            case 9: {
+            case 10: {
                 break;
             }
             default: {
@@ -312,7 +380,7 @@ int main() {
                 break;
             }
         }
-    } while (opcion != 9);
+    } while (opcion != 10);
     
     delete examen;
     return 0;
