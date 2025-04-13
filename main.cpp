@@ -9,11 +9,6 @@
 
 #include <fstream>
 #include "libs/json/json.hpp"
-/* #include "Examen.cpp"
-#include "Pregunta.cpp"
-#include "PreguntaVF.cpp"
-#include "PreguntaSM.cpp"
-#include "PreguntaRC.cpp" */
 
 using json = nlohmann::json;
 using namespace std;

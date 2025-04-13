@@ -43,6 +43,9 @@ public:
     void filtrarPreguntas(int nivelBloom) const;
     void mostrarExamen() const;
     void mostrarPreguntas() const;
+    private:
+    // Función auxiliar para verificar si existe ya una pregunta con el mismo enunciado
+    bool existePregunta(const string &enunciado) const;
 };
 
 #endif

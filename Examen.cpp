@@ -10,12 +10,33 @@ Examen::~Examen() {
     }
 }
 
-void Examen::agregarPregunta(Pregunta* pregunta) {
-    if (numPreguntasActual < cantidadPreguntas) {
-        preguntas[numPreguntasActual++] = pregunta;
-    } else {
-        cout << "No se pueden agregar más preguntas. Límite alcanzado." << endl;
+// Función auxiliar para verificar si ya existe una pregunta con el mismo enunciado
+bool Examen::existePregunta(const string &enunciado) const {
+    for (int i = 0; i < numPreguntasActual; i++) {
+        // Comparamos el enunciado actual con el de cada pregunta ya agregada.
+        if (preguntas[i] && preguntas[i]->getEnunciado() == enunciado) {
+            return true;
+        }
     }
+    return false;
+}
+
+void Examen::agregarPregunta(Pregunta* pregunta) {
+    if (numPreguntasActual >= cantidadPreguntas) {
+        cout << "No se puede agregar la pregunta: se ha alcanzado el límite del examen." << endl;
+        delete pregunta;
+        return;
+    }
+
+    // Validamos que no exista una pregunta con el mismo enunciado.
+    if (existePregunta(pregunta->getEnunciado())) {
+        cout << "La pregunta ya existe (enunciado duplicado). No se agregó." << endl;
+        delete pregunta;  // liberamos memoria si no se va a usar
+        return;
+    }
+
+    // Si no existe duplicado, la agregamos
+    preguntas[numPreguntasActual++] = pregunta;
 }
 
 void Examen::actualizarPregunta(int id) {
