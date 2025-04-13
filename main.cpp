@@ -210,7 +210,7 @@ int main() {
             cout << "Entrada inválida. Por favor, ingrese un número." << endl;
             continue; // Vuelve al menú
         } */
-        //cin.ignore();
+        cin.ignore();
 
         switch(opcion) {
             case 1: { // crear examen
