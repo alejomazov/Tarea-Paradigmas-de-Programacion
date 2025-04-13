@@ -11,7 +11,7 @@ Pregunta::Pregunta(int _id, string _tipo, int _nivelBloom, int _tiempoEstimado,
 
 void Pregunta::mostrarInfo() const {
     cout << "ID: " << id << endl;
-
+/*
     if (tipo == "V")
         cout << "Verdadero o Falso" << endl;
     else if (tipo == "M")
@@ -20,7 +20,7 @@ void Pregunta::mostrarInfo() const {
         cout << "Respuesta Corta" << endl;
     else
         cout << "Tipo no definido" << endl;
-
+*/
     string nivelBloomNombre;
     switch(nivelBloom) {
         case 0: nivelBloomNombre = "Recordar"; break;
