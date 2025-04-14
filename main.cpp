@@ -1,22 +1,22 @@
 #include <iostream>
 #include <string>
 #include <limits>
+#include <fstream>
+#include <sstream>
+#include <cctype>
 #include "Examen.h"
 #include "Pregunta.h"
 #include "PreguntaVF.h"
 #include "PreguntaSM.h"
 #include "PreguntaRC.h"
 
-#include <fstream>
-#include "libs/json/json.hpp"
-
-using json = nlohmann::json;
 using namespace std;
 
+// Función para mostrar el menú principal.
 void mostrarMenu() {
     cout << "\n=== MENÚ ===" << endl;
     cout << "1. Crear Examen" << endl;
-    cout << "2. Cargar Examen desde archivo" << endl; 
+    cout << "2. Cargar Examen desde archivo TXT" << endl;
     cout << "3. Añadir Pregunta" << endl;
     cout << "4. Actualizar Pregunta" << endl;
     cout << "5. Borrar Pregunta" << endl;
@@ -24,248 +24,274 @@ void mostrarMenu() {
     cout << "7. Filtrar Pregunta" << endl;
     cout << "8. Mostrar Evaluación" << endl;
     cout << "9. Mostrar Preguntas" << endl;
-    cout << "10. Salir" << endl;
+    cout << "10. Guardar Examen a archivo TXT" << endl;
+    cout << "11. Salir" << endl;
     cout << "Elija una opción: ";
 }
 
-// funciones extra para tomar y crear un archivo json
-json serializePregunta(const Pregunta* pregunta) {
-    json j;
-    j["id"] = pregunta->getId();
-    j["tipo"] = pregunta->getTipo();
-    j["nivelBloom"] = pregunta->getNivelBloom();
-    j["tiempoEstimado"] = pregunta->getTiempoEstimado();
-    j["enunciado"] = pregunta->getEnunciado();
-    j["solucion"] = pregunta->getSolucion();
-    j["puntaje"] = pregunta->getPuntaje();
-    return j;
-}
-
-
-json serializeExamen(const Examen &examen) {
-    json j;
-    j["nombre"] = examen.getNombre();
-    j["asignatura"] = examen.getAsignatura();
-    j["cantidadPreguntas"] = examen.getCantidadPreguntas();
-    j["numPreguntasActual"] = examen.getNumPreguntasActual();
-
-    // Creamos un arreglo JSON para las preguntas
-    json jPreguntas = json::array();
+// Función para guardar el examen en un archivo TXT.
+// Se utiliza un formato de bloques de 7 líneas (cada bloque contiene en el orden:
+// enunciado, id, nivelBloom, puntaje, solucion, tiempoEstimado y tipo).
+void guardarExamenEnArchivoTXT(const Examen &examen, const string &nombreArchivo = "Preguntas.txt") {
+    ofstream outFile(nombreArchivo);
+    if (!outFile.is_open()) {
+        cout << "Error al abrir el archivo TXT para escribir." << endl;
+        return;
+    }
+    outFile << "Preguntas" << endl << endl;
     for (int i = 0; i < examen.getNumPreguntasActual(); i++) {
-        // Obtenemos cada pregunta usando el getter que agregamos
         Pregunta* p = examen.getPregunta(i);
-        jPreguntas.push_back( serializePregunta(p) );
+        outFile << "\"enunciado\": \"" << p->getEnunciado() << "\"," << endl;
+        outFile << "\"id\":" << p->getId() << "," << endl;
+        outFile << "\"nivelBloom\":" << p->getNivelBloom() << "," << endl;
+        outFile << "\"puntaje\":" << p->getPuntaje() << "," << endl;
+        outFile << "\"solucion\": \"" << p->getSolucion() << "\"," << endl;
+        outFile << "\"tiempoEstimado\":" << p->getTiempoEstimado() << "," << endl;
+        outFile << "\"tipo\": \"" << p->getTipo() << "\"" << endl << endl;
     }
-    j["preguntas"] = jPreguntas;
-    
-    return j;
+    outFile.close();
+    cout << "Examen guardado correctamente en " << nombreArchivo << endl;
 }
 
+// Función trim: elimina espacios y saltos de línea de ambos extremos de una cadena.
+string trim(const string &str) {
+    size_t first = str.find_first_not_of(" \t\n\r");
+    if (first == string::npos)
+        return "";
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, (last - first + 1));
+}
 
-void guardarExamenEnArchivo(const Examen &examen, const std::string &nombreArchivo = "examenes.json") {
-    json jExamenes; 
-    std::ifstream inFile(nombreArchivo);
-    
-    // Si el archivo existe, leemos su contenido.
-    if (inFile.is_open()) {
-        try {
-            inFile >> jExamenes;  // Se espera que jExamenes sea un arreglo
-            if (!jExamenes.is_array()) {
-                jExamenes = json::array();
-            }
-        } catch (const json::parse_error &e) {
-            jExamenes = json::array();
-        }
-        inFile.close();
-    } else {
-        // Si el archivo no existe, lo iniciamos como arreglo vacío.
-        jExamenes = json::array();
+// Función extraerNumeros: extrae sólo los caracteres numéricos de una cadena.
+string extraerNumeros(const string &str) {
+    string result;
+    for (char c : str) {
+        if (isdigit(static_cast<unsigned char>(c)))
+            result.push_back(c);
+    }
+    return result;
+}
+
+// Función para cargar un examen desde un archivo TXT con el formato especificado.
+// Se asume que el archivo tiene un encabezado "Preguntas" y cada pregunta ocupa 7 líneas en el orden:
+// "enunciado", "id", "nivelBloom", "puntaje", "solucion", "tiempoEstimado" y "tipo".
+// Se crea un objeto Examen con datos por defecto ("Examen TXT", "Asignatura TXT") y un máximo de 100 preguntas.
+Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
+    ifstream file(nombreArchivo);
+    if (!file.is_open()) {
+        cout << "Error al abrir el archivo TXT: " << nombreArchivo << endl;
+        return nullptr;
     }
     
-    // Serializamos el examen nuevo (actualizado).
-    json nuevoExamen = serializeExamen(examen);
+    // Creamos el examen con datos por defecto.
+    Examen* examen = new Examen("Examen TXT", "Asignatura TXT", 100);
+    string line;
     
-    // Buscamos si ya existe un examen con el mismo nombre (y asignatura, por ejemplo).
-    bool encontrado = false;
-    for (size_t i = 0; i < jExamenes.size(); i++) {
-        if (jExamenes[i]["nombre"] == examen.getNombre() &&
-            jExamenes[i]["asignatura"] == examen.getAsignatura()) {
-            // Reemplazamos la entrada existente por la nueva versión.
-            jExamenes[i] = nuevoExamen;
-            encontrado = true;
+    // Se salta el encabezado hasta encontrar "Preguntas"
+    while (getline(file, line)) {
+        if (line.find("Preguntas") != string::npos)
             break;
-        }
     }
     
-    // Si no se encontró, se agrega al final.
-    if (!encontrado) {
-        jExamenes.push_back(nuevoExamen);
-    }
-    
-    // Abrimos el archivo en modo de escritura para sobrescribir.
-    std::ofstream outFile(nombreArchivo);
-    if (outFile.is_open()) {
-        outFile << jExamenes.dump(4);
-        outFile.close();
-        cout << "Examen guardado correctamente en " << nombreArchivo << endl;
-    } else {
-        cerr << "Error al abrir el archivo para escribir." << endl;
-    }
-}
-
-
-json leerExamenesDesdeArchivo(const std::string &nombreArchivo = "examenes.json") {
-    json jExamenes;
-    std::ifstream inFile(nombreArchivo);
-    if (inFile.is_open()) {
-        try {
-            inFile >> jExamenes;
-            if (!jExamenes.is_array()) {
-                jExamenes = json::array();
-            }
-        } catch (const json::parse_error &e) {
-            jExamenes = json::array();
-        }
-        inFile.close();
-    } else {
-        // Si no existe el archivo, retornamos un arreglo vacío.
-        jExamenes = json::array();
-    }
-    return jExamenes;
-}
-
-Examen* cargarExamenDesdeJSON(const std::string &nombreArchivo = "examenes.json") {
-    json jExamenes = leerExamenesDesdeArchivo(nombreArchivo);
-
-    if (jExamenes.empty()) {
-        cout << "No hay exámenes guardados." << endl;
-        return nullptr;
-    }
-
-    cout << "Exámenes disponibles:" << endl;
-    for (size_t i = 0; i < jExamenes.size(); ++i) {
-        cout << i + 1 << ". " << jExamenes[i]["nombre"] << " - " << jExamenes[i]["asignatura"] << endl;
-    }
-
-    int opcion;
-    cout << "Seleccione el número del examen que desea cargar: ";
-    cin >> opcion;
-    cin.ignore();
-
-    if (opcion < 1 || opcion > static_cast<int>(jExamenes.size())) {
-        cout << "Opción inválida." << endl;
-        return nullptr;
-    }
-
-    json examenJSON = jExamenes[opcion - 1];
-    string nombre = examenJSON["nombre"];
-    string asignatura = examenJSON["asignatura"];
-    int cantidadPreguntas = examenJSON["cantidadPreguntas"];
-
-    // Creamos el objeto Examen con los datos básicos.
-    Examen* examen = new Examen(nombre, asignatura, cantidadPreguntas);
-
-    // Verificamos si existe la propiedad "preguntas" y es un arreglo.
-    if (examenJSON.contains("preguntas") && examenJSON["preguntas"].is_array()) {
-        for (const auto &p : examenJSON["preguntas"]) {
-            string tipo = p["tipo"];
-            int nivel = p["nivelBloom"];
-            int tiempo = p["tiempoEstimado"];
-            string enunciado = p["enunciado"];
-            string solucion = p["solucion"];
-            int puntaje = p["puntaje"];
-
-            Pregunta* pregunta = nullptr;
-            if (tipo == "V") {
-                pregunta = new PreguntaVF(nivel, tiempo, enunciado, solucion, puntaje);
-            } else if (tipo == "M") {
-                pregunta = new PreguntaSM(nivel, tiempo, enunciado, solucion, puntaje);
-            } else if (tipo == "R") {
-                pregunta = new PreguntaRC(nivel, tiempo, enunciado, solucion, puntaje);
-            }
-
-            if (pregunta) {
-                examen->agregarPregunta(pregunta);
+    // Se lee cada bloque de 7 líneas para cada pregunta.
+    while (getline(file, line)) {
+        if (trim(line).empty())
+            continue;
+        
+        string enunciado, solucion, tipo;
+        int id = 0, nivelBloom = 0, puntaje = 0, tiempoEstimado = 0;
+        
+        // 1. Línea: enunciado
+        {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+                enunciado = trim(line.substr(pos + 1));
+                if (!enunciado.empty() && enunciado.front() == '\"')
+                    enunciado.erase(0, 1);
+                if (!enunciado.empty() && enunciado.back() == ',')
+                    enunciado.pop_back();
+                enunciado = trim(enunciado);
+                if (!enunciado.empty() && enunciado.back() == '\"')
+                    enunciado.pop_back();
             }
         }
-    } else {
-        cout << "El examen seleccionado no contiene preguntas guardadas." << endl;
+        
+        // 2. Línea: id
+        if (!getline(file, line)) break;
+        {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+                string valor = trim(line.substr(pos + 1));
+                // Extraemos sólo los dígitos.
+                string digitos = extraerNumeros(valor);
+                if (!digitos.empty())
+                    id = stoi(digitos);
+                else {
+                    cout << "Error al convertir el campo 'id', valor no numérico: " << valor << endl;
+                    id = 0;
+                }
+            }
+        }
+        
+        // 3. Línea: nivelBloom
+        if (!getline(file, line)) break;
+        {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+                string valor = trim(line.substr(pos + 1));
+                string digitos = extraerNumeros(valor);
+                if (!digitos.empty())
+                    nivelBloom = stoi(digitos);
+                else {
+                    cout << "Error al convertir 'nivelBloom', valor no numérico: " << valor << endl;
+                    nivelBloom = 0;
+                }
+            }
+        }
+        
+        // 4. Línea: puntaje
+        if (!getline(file, line)) break;
+        {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+                string valor = trim(line.substr(pos + 1));
+                string digitos = extraerNumeros(valor);
+                if (!digitos.empty())
+                    puntaje = stoi(digitos);
+                else {
+                    cout << "Error al convertir 'puntaje', valor no numérico: " << valor << endl;
+                    puntaje = 0;
+                }
+            }
+        }
+        
+        // 5. Línea: solucion
+        if (!getline(file, line)) break;
+        {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+                solucion = trim(line.substr(pos + 1));
+                if (!solucion.empty() && solucion.front() == '\"')
+                    solucion.erase(0, 1);
+                if (!solucion.empty() && solucion.back() == ',')
+                    solucion.pop_back();
+                solucion = trim(solucion);
+                if (!solucion.empty() && solucion.back() == '\"')
+                    solucion.pop_back();
+            }
+        }
+        
+        // 6. Línea: tiempoEstimado
+        if (!getline(file, line)) break;
+        {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+                string valor = trim(line.substr(pos + 1));
+                string digitos = extraerNumeros(valor);
+                if (!digitos.empty())
+                    tiempoEstimado = stoi(digitos);
+                else {
+                    cout << "Error al convertir 'tiempoEstimado', valor no numérico: " << valor << endl;
+                    tiempoEstimado = 0;
+                }
+            }
+        }
+        
+        // 7. Línea: tipo
+        if (!getline(file, line)) break;
+        {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+                tipo = trim(line.substr(pos + 1));
+                if (!tipo.empty() && tipo.front() == '\"')
+                    tipo.erase(0, 1);
+                if (!tipo.empty() && tipo.back() == '\"')
+                    tipo.pop_back();
+            }
+        }
+        
+        // Creamos la pregunta según su tipo.
+        Pregunta* pregunta = nullptr;
+        if (tipo == "V")
+            pregunta = new PreguntaVF(nivelBloom, tiempoEstimado, enunciado, solucion, puntaje);
+        else if (tipo == "M")
+            pregunta = new PreguntaSM(nivelBloom, tiempoEstimado, enunciado, solucion, puntaje);
+        else if (tipo == "R")
+            pregunta = new PreguntaRC(nivelBloom, tiempoEstimado, enunciado, solucion, puntaje);
+        
+        if (pregunta)
+            examen->agregarPregunta(pregunta);
     }
-
+    file.close();
     return examen;
 }
 
-void mostrarExamenesGuardados(const std::string &nombreArchivo = "examenes.json") {
-    json jExamenes = leerExamenesDesdeArchivo(nombreArchivo);
-    cout << "Exámenes guardados en " << nombreArchivo << ":\n" << jExamenes.dump(4) << endl;
+// Función para mostrar el contenido completo del archivo TXT (opcional, para depuración).
+void mostrarExamenesGuardadosTXT(const string &nombreArchivo = "Preguntas.txt") {
+    ifstream inFile(nombreArchivo);
+    if (!inFile.is_open()) {
+        cout << "No se puede abrir el archivo: " << nombreArchivo << endl;
+        return;
+    }
+    string line;
+    while(getline(inFile, line)) {
+        cout << line << endl;
+    }
+    inFile.close();
 }
-
 
 int main() {
     Examen* examen = nullptr;
     int opcion;
     string temp;
-
+    
     do {
         mostrarMenu();
-        // cin >> opcion;
-        while (!(std::cin >> opcion) || (opcion < 1 || opcion > 10)) {
-            std::cin.clear(); 
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Ingreso no válido. Ingrese un número entre 1 y 10: ";
+        while (!(cin >> opcion) || (opcion < 1 || opcion > 11)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Ingreso no válido. Ingrese un número entre 1 y 11: ";
         }
-
-        /* if (cin.fail()) {
-            cin.clear(); // Limpia el estado de error
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Limpia el buffer
-            cout << "Entrada inválida. Por favor, ingrese un número." << endl;
-            continue; // Vuelve al menú
-        } */
         cin.ignore();
-
+        
         switch(opcion) {
-            case 1: { // crear examen
+            case 1: { // Crear examen
                 string nombre, asignatura;
                 int cantidadPreguntas;
-                
                 cout << "Nombre del Examen: ";
                 getline(cin, nombre);
                 cout << "Asignatura: ";
                 getline(cin, asignatura);
-                cout << "Cantidad de Preguntas: ";
+                cout << "Cantidad de Preguntas (máximo): ";
                 cin >> cantidadPreguntas;
                 cin.ignore();
                 
-                // Liberar el examen anterior si existe para evitar fugas de memoria
                 if (examen) {
                     delete examen;
                 }
                 examen = new Examen(nombre, asignatura, cantidadPreguntas);
-                if (examen != nullptr) {
-                    guardarExamenEnArchivo(*examen);
-                }
+                // Guardamos inmediatamente el examen vacío en el archivo TXT.
+                guardarExamenEnArchivoTXT(*examen);
                 break;
             }
-
-            case 2: { // cargar examen
+            case 2: { // Cargar examen desde archivo TXT
                 if (examen) {
                     delete examen;
                     examen = nullptr;
                 }
-                examen = cargarExamenDesdeJSON();
+                examen = cargarExamenDesdeTXT("Preguntas.txt");
+                if (examen)
+                    cout << "Examen cargado desde TXT." << endl;
                 break;
             }
-            
-            case 3: { // añadir pregunta
+            case 3: { // Añadir pregunta
                 if (!examen) {
                     cout << "Primero cree un examen." << endl;
                     break;
                 }
-                
                 string enunciado, solucion;
                 int nivelBloom, tiempo, puntaje;
                 int tipoPregunta;
-                
                 do {
                     cout << "Tipo de Pregunta:" << endl;
                     cout << "1 = Verdadero/Falso" << endl;
@@ -294,23 +320,20 @@ int main() {
                 cin >> puntaje;
                 cin.ignore();
                 
-                Pregunta *nuevaPregunta = nullptr;
-                if (tipoPregunta == 1) {
+                Pregunta* nuevaPregunta = nullptr;
+                if (tipoPregunta == 1)
                     nuevaPregunta = new PreguntaVF(nivelBloom, tiempo, enunciado, solucion, puntaje);
-                }
-                else if (tipoPregunta == 2) {
+                else if (tipoPregunta == 2)
                     nuevaPregunta = new PreguntaSM(nivelBloom, tiempo, enunciado, solucion, puntaje);
-                }
-                else if (tipoPregunta == 3) {
+                else if (tipoPregunta == 3)
                     nuevaPregunta = new PreguntaRC(nivelBloom, tiempo, enunciado, solucion, puntaje);
-                }
                 
                 examen->agregarPregunta(nuevaPregunta);
-                // Actualizamos el archivo JSON con el examen ya modificado (con la nueva pregunta)
-                guardarExamenEnArchivo(*examen);
+                // Actualizamos el archivo TXT con el examen modificado.
+                guardarExamenEnArchivoTXT(*examen);
                 break;
             }
-            case 4: { // actualizar pregunta
+            case 4: { // Actualizar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -320,34 +343,30 @@ int main() {
                 cin >> id;
                 cin.ignore();
                 examen->actualizarPregunta(id);
-                if (examen != nullptr) {
-                    guardarExamenEnArchivo(*examen);
-                }
+                guardarExamenEnArchivoTXT(*examen);
                 break;
             }
-            case 5: { // borrar pregunta
+            case 5: { // Borrar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
                 }
                 char confirmacion;
-                std::cout << "¿Está seguro de que desea borrar el ítem? (S/N): ";
-                std::cin >> confirmacion;
+                cout << "¿Está seguro de que desea borrar el ítem? (S/N): ";
+                cin >> confirmacion;
                 if (toupper(confirmacion) != 'S') {
-                    std::cout << "Operación cancelada.\n";
+                    cout << "Operación cancelada." << endl;
                     break;
                 }
-
                 int id;
                 cout << "ID de la pregunta a borrar: ";
                 cin >> id;
                 cin.ignore();
                 examen->borrarPregunta(id);
-                // Actualizamos el archivo JSON para reflejar la eliminación
-                guardarExamenEnArchivo(*examen);
+                guardarExamenEnArchivoTXT(*examen);
                 break;
             }
-            case 6: { // consultar informacion pregunta
+            case 6: { // Consultar información de una pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -359,7 +378,7 @@ int main() {
                 examen->consultarPregunta(id);
                 break;
             }
-            case 7: { // filtrar evaluacion
+            case 7: { // Filtrar preguntas por nivel
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -371,7 +390,7 @@ int main() {
                 examen->filtrarPreguntas(nivel);
                 break;
             }
-            case 8: { // mostrar evaluacion
+            case 8: { // Mostrar evaluación
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -379,7 +398,7 @@ int main() {
                 examen->mostrarExamen();
                 break;
             }
-            case 9: { // mostrar pregunta
+            case 9: { // Mostrar preguntas
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
@@ -387,7 +406,15 @@ int main() {
                 examen->mostrarPreguntas();
                 break;
             }
-            case 10: {
+            case 10: { // Guardar examen a archivo TXT (opción explícita)
+                if (!examen) {
+                    cout << "No hay examen creado." << endl;
+                    break;
+                }
+                guardarExamenEnArchivoTXT(*examen);
+                break;
+            }
+            case 11: {
                 break;
             }
             default: {
@@ -395,7 +422,7 @@ int main() {
                 break;
             }
         }
-    } while (opcion != 10);
+    } while (opcion != 11);
     
     delete examen;
     return 0;

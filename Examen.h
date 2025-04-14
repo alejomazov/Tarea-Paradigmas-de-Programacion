@@ -2,6 +2,9 @@
 #ifndef EXAMEN_H
 #define EXAMEN_H
 #include "Pregunta.h"
+#include "PreguntaVF.h"
+#include "PreguntaSM.h"
+#include "PreguntaRC.h"
 #include <string>
 
 class Examen {

@@ -39,28 +39,31 @@ void Examen::agregarPregunta(Pregunta* pregunta) {
     preguntas[numPreguntasActual++] = pregunta;
 }
 
-void Examen::actualizarPregunta(int id) {
-    for(int i = 0; i < numPreguntasActual; i++) {
-        if(preguntas[i]->getId() == id) {
-            string tipo, enunciado, solucion;
+void Examen::actualizarPregunta(int id) { // reemplaza la pregunta para que cambie el tipo -- pero aun asi tecnicamente "actualiza" la pregunta ya que se mantiene el id
+    for (int i = 0; i < numPreguntasActual; i++) {
+        if (preguntas[i]->getId() == id) {
+            string enunciado, solucion;
             int nivelBloom, tiempo, puntaje;
-            
             int tipoPregunta;
+            
             do {
-                cout << "Tipo de Pregunta (1=Verdadero/Falso, 2=Selección Multiple, 3=Respuesta Corta): ";
+                cout << "Tipo de Pregunta (1=Verdadero/Falso, 2=Selección Múltiple, 3=Respuesta Corta): ";
                 cin >> tipoPregunta;
                 cin.ignore();
             } while (tipoPregunta != 1 && tipoPregunta != 2 && tipoPregunta != 3);
             
+            // Se determina el nuevo tipo
+            string nuevoTipo;
             if (tipoPregunta == 1)
-                tipo = "V"; // Verdadero/Falso
+                nuevoTipo = "V";
             else if (tipoPregunta == 2)
-                tipo = "M"; // Selección Multiple
+                nuevoTipo = "M";
             else if (tipoPregunta == 3)
-                tipo = "R"; // Respuesta Corta
+                nuevoTipo = "R";
             
             cout << "Nivel de Taxonomía de Bloom (0-5): ";
             cin >> nivelBloom;
+            cin.ignore();
             
             cout << "Tiempo Estimado (minutos): ";
             cin >> tiempo;
@@ -74,20 +77,23 @@ void Examen::actualizarPregunta(int id) {
             
             cout << "Puntaje: ";
             cin >> puntaje;
+            cin.ignore();
 
-            //delete preguntas[i];
-            //preguntas[i] = new Pregunta(id, tipo, nivelBloom, tiempo, enunciado, solucion, puntaje);
-            preguntas[i]->setTipo(tipo);
-            preguntas[i]->setNivelBloom(nivelBloom);
-            preguntas[i]->setTiempoEstimado(tiempo);
-            preguntas[i]->setEnunciado(enunciado);
-            preguntas[i]->setSolucion(solucion);
-            preguntas[i]->setPuntaje(puntaje);
+            // Elimina la instancia actual
+            delete preguntas[i];
+            // Crea una nueva instancia con el nuevo tipo y asigna el id original si es necesario
+            if (nuevoTipo == "V")
+                preguntas[i] = new PreguntaVF(nivelBloom, tiempo, enunciado, solucion, puntaje);
+            else if (nuevoTipo == "M")
+                preguntas[i] = new PreguntaSM(nivelBloom, tiempo, enunciado, solucion, puntaje);
+            else if (nuevoTipo == "R")
+                preguntas[i] = new PreguntaRC(nivelBloom, tiempo, enunciado, solucion, puntaje);
             return;
         }
     }
     cout << "Pregunta no encontrada." << endl;
 }
+
 
 void Examen::borrarPregunta(int id) {
     for(int i = 0; i < numPreguntasActual; i++) {
@@ -148,3 +154,54 @@ void Examen::mostrarExamen() const {
     }
     cout << "Tiempo total: " << tiempoTotal << " minutos" << endl;
 }
+
+
+/* void Examen::actualizarPregunta(int id) { // actualizar pregunta anterior
+    for(int i = 0; i < numPreguntasActual; i++) {
+        if(preguntas[i]->getId() == id) {
+            string tipo, enunciado, solucion;
+            int nivelBloom, tiempo, puntaje;
+            
+            int tipoPregunta;
+            do {
+                cout << "Tipo de Pregunta (1=Verdadero/Falso, 2=Selección Multiple, 3=Respuesta Corta): ";
+                cin >> tipoPregunta;
+                cin.ignore();
+            } while (tipoPregunta != 1 && tipoPregunta != 2 && tipoPregunta != 3);
+            
+            if (tipoPregunta == 1)
+                tipo = "V"; // Verdadero/Falso
+            else if (tipoPregunta == 2)
+                tipo = "M"; // Selección Multiple
+            else if (tipoPregunta == 3)
+                tipo = "R"; // Respuesta Corta
+            
+            cout << "Nivel de Taxonomía de Bloom (0-5): ";
+            cin >> nivelBloom;
+            
+            cout << "Tiempo Estimado (minutos): ";
+            cin >> tiempo;
+            cin.ignore();
+            
+            cout << "Enunciado: ";
+            getline(cin, enunciado);
+            
+            cout << "Solución Esperada: ";
+            getline(cin, solucion);
+            
+            cout << "Puntaje: ";
+            cin >> puntaje;
+
+            //delete preguntas[i];
+            //preguntas[i] = new Pregunta(id, tipo, nivelBloom, tiempo, enunciado, solucion, puntaje);
+            preguntas[i]->setTipo(tipo);
+            preguntas[i]->setNivelBloom(nivelBloom);
+            preguntas[i]->setTiempoEstimado(tiempo);
+            preguntas[i]->setEnunciado(enunciado);
+            preguntas[i]->setSolucion(solucion);
+            preguntas[i]->setPuntaje(puntaje);
+            return;
+        }
+    }
+    cout << "Pregunta no encontrada." << endl;
+} */
