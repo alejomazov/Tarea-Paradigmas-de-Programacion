@@ -284,7 +284,7 @@ int main() {
                 }
                 examen = cargarExamenDesdeTXT("Preguntas.txt");
                 if (examen)
-                    cout << "Examen cargado desde TXT." << endl;
+                    cout << "\nExamen cargado desde TXT." << endl;
                 break;
             }
             case 3: { // Añadir pregunta
