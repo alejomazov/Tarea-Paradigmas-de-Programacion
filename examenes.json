@@ -1,33 +1,170 @@
 [
     {
-        "asignatura": "mal",
-        "cantidadPreguntas": 3,
-        "nombre": "hola",
-        "numPreguntasActual": 0,
-        "preguntas": []
-    },
-    {
-        "asignatura": "222222222222",
-        "cantidadPreguntas": 5,
-        "nombre": "2",
-        "numPreguntasActual": 2,
+        "nombre": "Examen Completo",
+        "asignatura": "Ciencias",
+        "cantidadPreguntas": 18,
+        "numPreguntasActual": 18,
         "preguntas": [
             {
-                "enunciado": "1",
-                "id": 2,
-                "nivelBloom": 1,
+                "enunciado": "La fotosíntesis se realiza en las mitocondrias.",
+                "id": 1,
+                "nivelBloom": 0,
                 "puntaje": 1,
-                "solucion": "1",
+                "solucion": "F",
                 "tiempoEstimado": 1,
                 "tipo": "V"
             },
             {
-                "enunciado": "adokndc",
+                "enunciado": "Las mitocondrias permiten que las plantas absorban agua.",
+                "id": 2,
+                "nivelBloom": 1,
+                "puntaje": 1,
+                "solucion": "F",
+                "tiempoEstimado": 2,
+                "tipo": "V"
+            },
+            {
+                "enunciado": "Si uso un fonendoscopio puedo analizar la actividad cerebral.",
                 "id": 3,
-                "nivelBloom": 3,
-                "puntaje": 2,
-                "solucion": "odkcms",
+                "nivelBloom": 2,
+                "puntaje": 1,
+                "solucion": "F",
                 "tiempoEstimado": 3,
+                "tipo": "V"
+            },
+            {
+                "enunciado": "Es imposible para el cuerpo eliminar toxinas si falla el hígado.",
+                "id": 4,
+                "nivelBloom": 3,
+                "puntaje": 1,
+                "solucion": "V",
+                "tiempoEstimado": 3,
+                "tipo": "V"
+            },
+            {
+                "enunciado": "En caso de influenza, se debe tener un tratamiento antibiótico.",
+                "id": 5,
+                "nivelBloom": 4,
+                "puntaje": 1,
+                "solucion": "F",
+                "tiempoEstimado": 3,
+                "tipo": "V"
+            },
+            {
+                "enunciado": "Cualquier estudio en donde evalúe el comportamiento del pH celular no aporta evidencia científica.",
+                "id": 6,
+                "nivelBloom": 5,
+                "puntaje": 1,
+                "solucion": "F",
+                "tiempoEstimado": 3,
+                "tipo": "V"
+            },
+            {
+                "enunciado": "¿Cuál es la función principal de la mitocondria en la célula?\nA) Retener energía\nB) Producir proteínas\nC) Transportar sodio y cloro\nD) Realizar respiración celular",
+                "id": 7,
+                "nivelBloom": 0,
+                "puntaje": 1,
+                "solucion": "B",
+                "tiempoEstimado": 2,
+                "tipo": "M"
+            },
+            {
+                "enunciado": "¿Qué aseveración describe mejor el proceso de fotosíntesis?\nA) Movimiento de proteínas contra una gradiente de concentración\nB) Paso de agua a través en la célula\nC) Producción de energía en los cloroplastos\nD) Absorción de nutrientes en el intestino",
+                "id": 8,
+                "nivelBloom": 1,
+                "puntaje": 1,
+                "solucion": "C",
+                "tiempoEstimado": 2,
+                "tipo": "M"
+            },
+            {
+                "enunciado": "Si un paciente en su examen presenta un bajo hematocrito, ¿qué órgano podría estar fallando?\nA) Pulmones\nB) Riñón\nC) Médula ósea\nD) Cerebro",
+                "id": 9,
+                "nivelBloom": 2,
+                "puntaje": 1,
+                "solucion": "C",
+                "tiempoEstimado": 2,
+                "tipo": "M"
+            },
+            {
+                "enunciado": "Cuando una enzima se desnaturaliza por temperatura, ¿qué parte de su función se ve afectada?\nA) Su función\nB) Su unión al sustrato\nC) El transporte por la membrana\nD) La síntesis",
+                "id": 10,
+                "nivelBloom": 3,
+                "puntaje": 1,
+                "solucion": "B",
+                "tiempoEstimado": 2,
+                "tipo": "M"
+            },
+            {
+                "enunciado": "¿Qué afirmación apoya de mejor forma el uso de vacunas en la población?\nA) Ayudan a la economía local\nB) Aumentan los leucocitos y neutrófilos\nC) Previenen enfermedades\nD) Tienen efecto sólo en la población mayor",
+                "id": 11,
+                "nivelBloom": 4,
+                "puntaje": 1,
+                "solucion": "C",
+                "tiempoEstimado": 2,
+                "tipo": "M"
+            },
+            {
+                "enunciado": "¿Qué propuesta puede ayudar a conservar mejor las especies en extinción?\nA) Eliminar especies invasoras\nB) Dejar de regular el turismo\nC) Crear espacios protegidos para las especies en su hábitat\nD) Dejar al país sin actividad agrícola",
+                "id": 12,
+                "nivelBloom": 5,
+                "puntaje": 1,
+                "solucion": "C",
+                "tiempoEstimado": 2,
+                "tipo": "M"
+            },
+            {
+                "enunciado": "¿Cuál es la molécula que almacena la información genética en la mayoría de los organismos?",
+                "id": 13,
+                "nivelBloom": 0,
+                "puntaje": 1,
+                "solucion": "DNA",
+                "tiempoEstimado": 1,
+                "tipo": "R"
+            },
+            {
+                "enunciado": "Las mitocondrias son consideradas las \"centrales energéticas\" de la célula debido a que realizan la",
+                "id": 14,
+                "nivelBloom": 1,
+                "puntaje": 1,
+                "solucion": "Respiración celular",
+                "tiempoEstimado": 1,
+                "tipo": "R"
+            },
+            {
+                "enunciado": "Si una persona no produce suficiente insulina, ¿qué efecto tendría esto en sus niveles de glucosa en sangre?",
+                "id": 15,
+                "nivelBloom": 2,
+                "puntaje": 1,
+                "solucion": "Aumentan",
+                "tiempoEstimado": 2,
+                "tipo": "R"
+            },
+            {
+                "enunciado": "Un científico observa que ha disminuido la cantidad de agua en el río a lo largo de una década. ¿Qué fenómeno actual podría explicarlo?",
+                "id": 16,
+                "nivelBloom": 3,
+                "puntaje": 1,
+                "solucion": "Cambio climático",
+                "tiempoEstimado": 2,
+                "tipo": "R"
+            },
+            {
+                "enunciado": "Compara el uso de antibióticos y vacunas en el control de enfermedades. ¿Cuál es más efectivo a largo plazo?",
+                "id": 17,
+                "nivelBloom": 4,
+                "puntaje": 1,
+                "solucion": "Vacunas",
+                "tiempoEstimado": 2,
+                "tipo": "R"
+            },
+            {
+                "enunciado": "Propón una estrategia para reducir la contaminación del aire en la ciudad de Santiago",
+                "id": 18,
+                "nivelBloom": 5,
+                "puntaje": 1,
+                "solucion": "Restricción vehicular",
+                "tiempoEstimado": 2,
                 "tipo": "R"
             }
         ]
