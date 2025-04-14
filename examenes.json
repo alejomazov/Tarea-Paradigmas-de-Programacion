@@ -1,0 +1,35 @@
+[
+    {
+        "asignatura": "mal",
+        "cantidadPreguntas": 3,
+        "nombre": "hola",
+        "numPreguntasActual": 0,
+        "preguntas": []
+    },
+    {
+        "asignatura": "222222222222",
+        "cantidadPreguntas": 5,
+        "nombre": "2",
+        "numPreguntasActual": 2,
+        "preguntas": [
+            {
+                "enunciado": "1",
+                "id": 2,
+                "nivelBloom": 1,
+                "puntaje": 1,
+                "solucion": "1",
+                "tiempoEstimado": 1,
+                "tipo": "V"
+            },
+            {
+                "enunciado": "adokndc",
+                "id": 3,
+                "nivelBloom": 3,
+                "puntaje": 2,
+                "solucion": "odkcms",
+                "tiempoEstimado": 3,
+                "tipo": "R"
+            }
+        ]
+    }
+]

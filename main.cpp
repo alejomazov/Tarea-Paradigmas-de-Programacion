@@ -71,11 +71,9 @@ void guardarExamenEnArchivo(const Examen &examen, const std::string &nombreArchi
         try {
             inFile >> jExamenes;  // Se espera que jExamenes sea un arreglo
             if (!jExamenes.is_array()) {
-                // Si no lo es, lo reiniciamos como un arreglo vacío
                 jExamenes = json::array();
             }
         } catch (const json::parse_error &e) {
-            // Si ocurre un error al parsear (archivo corrupto, por ejemplo), inicializamos un arreglo vacío.
             jExamenes = json::array();
         }
         inFile.close();
@@ -84,15 +82,29 @@ void guardarExamenEnArchivo(const Examen &examen, const std::string &nombreArchi
         jExamenes = json::array();
     }
     
-    // Serializamos el examen nuevo.
+    // Serializamos el examen nuevo (actualizado).
     json nuevoExamen = serializeExamen(examen);
-    // Agregamos el examen nuevo al arreglo que ya se leyó (o que se creó vacío).
-    jExamenes.push_back(nuevoExamen);
     
-    // Abrimos el archivo en modo escritura (esto sobrescribe lo anterior)
+    // Buscamos si ya existe un examen con el mismo nombre (y asignatura, por ejemplo).
+    bool encontrado = false;
+    for (size_t i = 0; i < jExamenes.size(); i++) {
+        if (jExamenes[i]["nombre"] == examen.getNombre() &&
+            jExamenes[i]["asignatura"] == examen.getAsignatura()) {
+            // Reemplazamos la entrada existente por la nueva versión.
+            jExamenes[i] = nuevoExamen;
+            encontrado = true;
+            break;
+        }
+    }
+    
+    // Si no se encontró, se agrega al final.
+    if (!encontrado) {
+        jExamenes.push_back(nuevoExamen);
+    }
+    
+    // Abrimos el archivo en modo de escritura para sobrescribir.
     std::ofstream outFile(nombreArchivo);
     if (outFile.is_open()) {
-        // Guardamos el JSON con indentación para facilitar la lectura.
         outFile << jExamenes.dump(4);
         outFile.close();
         cout << "Examen guardado correctamente en " << nombreArchivo << endl;
@@ -282,7 +294,7 @@ int main() {
                 cin >> puntaje;
                 cin.ignore();
                 
-                Pregunta* nuevaPregunta = nullptr;
+                Pregunta *nuevaPregunta = nullptr;
                 if (tipoPregunta == 1) {
                     nuevaPregunta = new PreguntaVF(nivelBloom, tiempo, enunciado, solucion, puntaje);
                 }
@@ -294,6 +306,8 @@ int main() {
                 }
                 
                 examen->agregarPregunta(nuevaPregunta);
+                // Actualizamos el archivo JSON con el examen ya modificado (con la nueva pregunta)
+                guardarExamenEnArchivo(*examen);
                 break;
             }
             case 4: { // actualizar pregunta
@@ -329,6 +343,8 @@ int main() {
                 cin >> id;
                 cin.ignore();
                 examen->borrarPregunta(id);
+                // Actualizamos el archivo JSON para reflejar la eliminación
+                guardarExamenEnArchivo(*examen);
                 break;
             }
             case 6: { // consultar informacion pregunta
