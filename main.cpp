@@ -364,15 +364,15 @@ int main() {
                 examen->mostrarPreguntas();
 
                 char confirmacion;
-                cout << "\n¿Está seguro de que desea borrar el ítem? (S/N): ";
+                int id;
+                cout << "\nID de la pregunta a borrar: ";
+                cin >> id;
+                cout << "\n¿Está seguro de que desea borrar el ítem ("<< id <<")? (S/N): ";
                 cin >> confirmacion;
                 if (toupper(confirmacion) != 'S') {
                     cout << "Operación cancelada." << endl;
                     break;
                 }
-                int id;
-                cout << "\nID de la pregunta a borrar: ";
-                cin >> id;
                 cin.ignore();
                 examen->borrarPregunta(id);
                 guardarExamenEnArchivoTXT(*examen);
