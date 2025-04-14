@@ -82,25 +82,25 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
         cout << "Error al abrir el archivo TXT: " << nombreArchivo << endl;
         return nullptr;
     }
-    
+
     // Creamos el examen con datos por defecto.
     Examen* examen = new Examen("Examen TXT", "Asignatura TXT", 100);
     string line;
-    
+
     // Se salta el encabezado hasta encontrar "Preguntas"
     while (getline(file, line)) {
         if (line.find("Preguntas") != string::npos)
             break;
     }
-    
+
     // Se lee cada bloque de 7 líneas para cada pregunta.
     while (getline(file, line)) {
         if (trim(line).empty())
             continue;
-        
+
         string enunciado, solucion, tipo;
-        int id = 0, nivelBloom = 0, puntaje = 0, tiempoEstimado = 0;
-        
+        int id, nivelBloom = 0, puntaje = 0, tiempoEstimado = 0;
+
         // 1. Línea: enunciado
         {
             size_t pos = line.find(":");
@@ -115,7 +115,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
                     enunciado.pop_back();
             }
         }
-        
+
         // 2. Línea: id
         if (!getline(file, line)) break;
         {
@@ -132,7 +132,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
                 }
             }
         }
-        
+
         // 3. Línea: nivelBloom
         if (!getline(file, line)) break;
         {
@@ -148,7 +148,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
                 }
             }
         }
-        
+
         // 4. Línea: puntaje
         if (!getline(file, line)) break;
         {
@@ -164,7 +164,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
                 }
             }
         }
-        
+
         // 5. Línea: solucion
         if (!getline(file, line)) break;
         {
@@ -180,7 +180,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
                     solucion.pop_back();
             }
         }
-        
+
         // 6. Línea: tiempoEstimado
         if (!getline(file, line)) break;
         {
@@ -196,7 +196,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
                 }
             }
         }
-        
+
         // 7. Línea: tipo
         if (!getline(file, line)) break;
         {
@@ -209,7 +209,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
                     tipo.pop_back();
             }
         }
-        
+
         // Creamos la pregunta según su tipo.
         Pregunta* pregunta = nullptr;
         if (tipo == "V")
@@ -218,33 +218,36 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
             pregunta = new PreguntaSM(nivelBloom, tiempoEstimado, enunciado, solucion, puntaje);
         else if (tipo == "R")
             pregunta = new PreguntaRC(nivelBloom, tiempoEstimado, enunciado, solucion, puntaje);
-        
-        if (pregunta)
-            examen->agregarPregunta(pregunta);
-    }
-    file.close();
-    return examen;
-}
 
+      if (pregunta) {
+                pregunta->setId(id);                      
+                examen->agregarPregunta(pregunta);
+                cout << "\nCargada pregunta ID " << id << ": " << enunciado << endl;
+            }
+        } 
+
+        file.close();
+        return examen; 
+    }
 // Función para mostrar el contenido completo del archivo TXT (opcional, para depuración).
 void mostrarExamenesGuardadosTXT(const string &nombreArchivo = "Preguntas.txt") {
     ifstream inFile(nombreArchivo);
     if (!inFile.is_open()) {
-        cout << "No se puede abrir el archivo: " << nombreArchivo << endl;
-        return;
-    }
-    string line;
-    while(getline(inFile, line)) {
-        cout << line << endl;
-    }
-    inFile.close();
+            cout << "No se puede abrir el archivo: " << nombreArchivo << endl;
+            return;
+        }
+        string line;
+        while(getline(inFile, line)) {
+            cout << line << endl;
+        }
+        inFile.close();
 }
 
 int main() {
     Examen* examen = nullptr;
     int opcion;
     string temp;
-    
+
     do {
         mostrarMenu();
         while (!(cin >> opcion) || (opcion < 1 || opcion > 11)) {
@@ -253,7 +256,7 @@ int main() {
             cout << "Ingreso no válido. Ingrese un número entre 1 y 11: ";
         }
         cin.ignore();
-        
+
         switch(opcion) {
             case 1: { // Crear examen
                 string nombre, asignatura;
@@ -265,7 +268,7 @@ int main() {
                 cout << "Cantidad de Preguntas (máximo): ";
                 cin >> cantidadPreguntas;
                 cin.ignore();
-                
+
                 if (examen) {
                     delete examen;
                 }
@@ -281,7 +284,7 @@ int main() {
                 }
                 examen = cargarExamenDesdeTXT("Preguntas.txt");
                 if (examen)
-                    cout << "Examen cargado desde TXT." << endl;
+                    cout << "\nExamen cargado desde TXT." << endl;
                 break;
             }
             case 3: { // Añadir pregunta
@@ -301,25 +304,25 @@ int main() {
                     cin >> tipoPregunta;
                     cin.ignore();
                 } while (tipoPregunta < 1 || tipoPregunta > 3);
-                
+
                 cout << "Nivel de Taxonomía de Bloom (0-5): ";
                 cin >> nivelBloom;
                 cin.ignore();
-                
+
                 cout << "Tiempo Estimado (minutos): ";
                 cin >> tiempo;
                 cin.ignore();
-                
+
                 cout << "Enunciado: ";
                 getline(cin, enunciado);
-                
+
                 cout << "Solución Esperada: ";
                 getline(cin, solucion);
-                
+
                 cout << "Puntaje: ";
                 cin >> puntaje;
                 cin.ignore();
-                
+
                 Pregunta* nuevaPregunta = nullptr;
                 if (tipoPregunta == 1)
                     nuevaPregunta = new PreguntaVF(nivelBloom, tiempo, enunciado, solucion, puntaje);
@@ -327,7 +330,7 @@ int main() {
                     nuevaPregunta = new PreguntaSM(nivelBloom, tiempo, enunciado, solucion, puntaje);
                 else if (tipoPregunta == 3)
                     nuevaPregunta = new PreguntaRC(nivelBloom, tiempo, enunciado, solucion, puntaje);
-                
+
                 examen->agregarPregunta(nuevaPregunta);
                 // Actualizamos el archivo TXT con el examen modificado.
                 guardarExamenEnArchivoTXT(*examen);
@@ -338,28 +341,37 @@ int main() {
                     cout << "No hay examen creado." << endl;
                     break;
                 }
+
+                cout << "\nEstas son las preguntas disponibles:\n";
+                examen->mostrarPreguntas();
+
                 int id;
-                cout << "ID de la pregunta a actualizar: ";
+                cout << "\nIngrese el ID de la pregunta a actualizar: ";
                 cin >> id;
                 cin.ignore();
+
                 examen->actualizarPregunta(id);
                 guardarExamenEnArchivoTXT(*examen);
                 break;
             }
+
             case 5: { // Borrar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
                 }
+                cout << "\nEstas son las preguntas disponibles:\n";
+                examen->mostrarPreguntas();
+
                 char confirmacion;
-                cout << "¿Está seguro de que desea borrar el ítem? (S/N): ";
+                cout << "\n¿Está seguro de que desea borrar el ítem? (S/N): ";
                 cin >> confirmacion;
                 if (toupper(confirmacion) != 'S') {
                     cout << "Operación cancelada." << endl;
                     break;
                 }
                 int id;
-                cout << "ID de la pregunta a borrar: ";
+                cout << "\nID de la pregunta a borrar: ";
                 cin >> id;
                 cin.ignore();
                 examen->borrarPregunta(id);
@@ -415,6 +427,7 @@ int main() {
                 break;
             }
             case 11: {
+                 cout << "Que tenga una buena jornada. Adiós." << endl;
                 break;
             }
             default: {
@@ -423,7 +436,7 @@ int main() {
             }
         }
     } while (opcion != 11);
-    
+
     delete examen;
     return 0;
 }
