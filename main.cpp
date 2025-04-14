@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <cctype>
+#include <dirent.h>    // Para listar archivos en el directorio
 #include "Examen.h"
 #include "Pregunta.h"
 #include "PreguntaVF.h"
@@ -11,6 +12,12 @@
 #include "PreguntaRC.h"
 
 using namespace std;
+
+// Constantes para el manejo de múltiples exámenes y archivos
+const int MAX_EXAMENES = 100;
+const int MAX_ARCHIVOS = 100;
+
+// --- Funciones ya existentes ---
 
 // Función para mostrar el menú principal.
 void mostrarMenu() {
@@ -27,30 +34,6 @@ void mostrarMenu() {
     cout << "10. Guardar Examen a archivo TXT" << endl;
     cout << "11. Salir" << endl;
     cout << "Elija una opción: ";
-}
-
-// Función para guardar el examen en un archivo TXT.
-// Se utiliza un formato de bloques de 7 líneas (cada bloque contiene en el orden:
-// enunciado, id, nivelBloom, puntaje, solucion, tiempoEstimado y tipo).
-void guardarExamenEnArchivoTXT(const Examen &examen, const string &nombreArchivo = "Preguntas.txt") {
-    ofstream outFile(nombreArchivo);
-    if (!outFile.is_open()) {
-        cout << "Error al abrir el archivo TXT para escribir." << endl;
-        return;
-    }
-    outFile << "Preguntas" << endl << endl;
-    for (int i = 0; i < examen.getNumPreguntasActual(); i++) {
-        Pregunta* p = examen.getPregunta(i);
-        outFile << "\"enunciado\": \"" << p->getEnunciado() << "\"," << endl;
-        outFile << "\"id\":" << p->getId() << "," << endl;
-        outFile << "\"nivelBloom\":" << p->getNivelBloom() << "," << endl;
-        outFile << "\"puntaje\":" << p->getPuntaje() << "," << endl;
-        outFile << "\"solucion\": \"" << p->getSolucion() << "\"," << endl;
-        outFile << "\"tiempoEstimado\":" << p->getTiempoEstimado() << "," << endl;
-        outFile << "\"tipo\": \"" << p->getTipo() << "\"" << endl << endl;
-    }
-    outFile.close();
-    cout << "Examen guardado correctamente en " << nombreArchivo << endl;
 }
 
 // Función trim: elimina espacios y saltos de línea de ambos extremos de una cadena.
@@ -72,18 +55,38 @@ string extraerNumeros(const string &str) {
     return result;
 }
 
+// Función para guardar el examen en un archivo TXT.
+// Se utiliza un formato de bloques de 7 líneas.
+void guardarExamenEnArchivoTXT(const Examen &examen, const string &nombreArchivo) {
+    ofstream outFile(nombreArchivo);
+    if (!outFile.is_open()) {
+        cout << "Error al abrir el archivo TXT para escribir." << endl;
+        return;
+    }
+    outFile << "Preguntas" << endl << endl;
+    for (int i = 0; i < examen.getNumPreguntasActual(); i++) {
+        Pregunta* p = examen.getPregunta(i);
+        outFile << "\"enunciado\": \"" << p->getEnunciado() << "\"," << endl;
+        outFile << "\"id\":" << p->getId() << "," << endl;
+        outFile << "\"nivelBloom\":" << p->getNivelBloom() << "," << endl;
+        outFile << "\"puntaje\":" << p->getPuntaje() << "," << endl;
+        outFile << "\"solucion\": \"" << p->getSolucion() << "\"," << endl;
+        outFile << "\"tiempoEstimado\":" << p->getTiempoEstimado() << "," << endl;
+        outFile << "\"tipo\": \"" << p->getTipo() << "\"" << endl << endl;
+    }
+    outFile.close();
+    cout << "Examen guardado correctamente en " << nombreArchivo << endl;
+}
+
 // Función para cargar un examen desde un archivo TXT con el formato especificado.
-// Se asume que el archivo tiene un encabezado "Preguntas" y cada pregunta ocupa 7 líneas en el orden:
-// "enunciado", "id", "nivelBloom", "puntaje", "solucion", "tiempoEstimado" y "tipo".
-// Se crea un objeto Examen con datos por defecto ("Examen TXT", "Asignatura TXT") y un máximo de 100 preguntas.
-Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
+Examen* cargarExamenDesdeTXT(const string &nombreArchivo) {
     ifstream file(nombreArchivo);
     if (!file.is_open()) {
         cout << "Error al abrir el archivo TXT: " << nombreArchivo << endl;
         return nullptr;
     }
 
-    // Creamos el examen con datos por defecto.
+    // Se crea el examen con datos por defecto.
     Examen* examen = new Examen("Examen TXT", "Asignatura TXT", 100);
     string line;
 
@@ -122,7 +125,6 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
             size_t pos = line.find(":");
             if (pos != string::npos) {
                 string valor = trim(line.substr(pos + 1));
-                // Extraemos sólo los dígitos.
                 string digitos = extraerNumeros(valor);
                 if (!digitos.empty())
                     id = stoi(digitos);
@@ -210,7 +212,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
             }
         }
 
-        // Creamos la pregunta según su tipo.
+        // Crear la pregunta según su tipo.
         Pregunta* pregunta = nullptr;
         if (tipo == "V")
             pregunta = new PreguntaVF(nivelBloom, tiempoEstimado, enunciado, solucion, puntaje);
@@ -219,35 +221,99 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
         else if (tipo == "R")
             pregunta = new PreguntaRC(nivelBloom, tiempoEstimado, enunciado, solucion, puntaje);
 
-      if (pregunta) {
-                pregunta->setId(id);                      
-                examen->agregarPregunta(pregunta);
-                cout << "\nCargada pregunta ID " << id << ": " << enunciado << endl;
-            }
-        } 
+        if (pregunta) {
+            pregunta->setId(id);                      
+            examen->agregarPregunta(pregunta);
+            cout << "\nCargada pregunta ID " << id << ": " << enunciado << endl;
+        }
+    } 
 
-        file.close();
-        return examen; 
+    file.close();
+    return examen; 
+}
+
+// --- Funciones adicionales para manejar múltiples exámenes sin vector ---
+
+// Función para "formatear" el nombre del archivo a partir del nombre del examen.
+// Reemplaza espacios por guiones bajos y le antepone "Examen_" y finaliza con ".txt"
+string formatearNombreArchivo(const string &nombreExamen) {
+    string nombreFormateado = "Examen_";
+    for (char c : nombreExamen) {
+        if (c == ' ')
+            nombreFormateado.push_back('_');
+        else
+            nombreFormateado.push_back(c);
     }
-// Función para mostrar el contenido completo del archivo TXT (opcional, para depuración).
+    nombreFormateado += ".txt";
+    return nombreFormateado;
+}
+
+// Función para que el usuario seleccione un examen entre los que están cargados.
+int seleccionarExamen(Examen* examenes[], int numExamenes) {
+    if(numExamenes == 0) {
+         cout << "No hay exámenes disponibles." << endl;
+         return -1;
+    }
+    cout << "\nLista de exámenes disponibles:" << endl;
+    for (int i = 0; i < numExamenes; i++) {
+         // Se asume que la clase Examen tiene el método getNombre()
+         cout << i << ". " << examenes[i]->getNombre() << endl;
+    }
+    int indice;
+    cout << "Ingrese el índice del examen a seleccionar: ";
+    cin >> indice;
+    cin.ignore();
+    if (indice < 0 || indice >= numExamenes) {
+         cout << "Índice no válido." << endl;
+         return -1;
+    }
+    return indice;
+}
+
+// Función para listar archivos de examen en el directorio actual.
+// Se listarán aquellos archivos que inicien con "Examen_" y finalicen con ".txt".
+int listarArchivosExamenes(string archivos[]) {
+    int count = 0;
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir (".")) != NULL) {
+         while ((ent = readdir(dir)) != NULL && count < MAX_ARCHIVOS) {
+             string filename = ent->d_name;
+             if (filename.size() >= 11 && 
+                 filename.substr(0, 7) == "Examen_" && 
+                 filename.substr(filename.size()-4) == ".txt") {
+                 archivos[count] = filename;
+                 count++;
+             }
+         }
+         closedir (dir);
+    } else {
+         cout << "No se pudo abrir el directorio actual." << endl;
+    }
+    return count;
+}
+
+// --- Función para mostrar el contenido de un archivo (opcional, para depuración) ---
 void mostrarExamenesGuardadosTXT(const string &nombreArchivo = "Preguntas.txt") {
     ifstream inFile(nombreArchivo);
     if (!inFile.is_open()) {
             cout << "No se puede abrir el archivo: " << nombreArchivo << endl;
             return;
         }
-        string line;
-        while(getline(inFile, line)) {
-            cout << line << endl;
-        }
-        inFile.close();
+    string line;
+    while(getline(inFile, line)) {
+        cout << line << endl;
+    }
+    inFile.close();
 }
 
+// --- Función main ---
 int main() {
-    Examen* examen = nullptr;
-    int opcion;
-    string temp;
+    // Arreglo para almacenar punteros a exámenes
+    Examen* examenes[MAX_EXAMENES] = { nullptr };
+    int numExamenes = 0;
 
+    int opcion;
     do {
         mostrarMenu();
         while (!(cin >> opcion) || (opcion < 1 || opcion > 11)) {
@@ -259,6 +325,10 @@ int main() {
 
         switch(opcion) {
             case 1: { // Crear examen
+                if (numExamenes >= MAX_EXAMENES) {
+                    cout << "Ha alcanzado el máximo número de exámenes." << endl;
+                    break;
+                }
                 string nombre, asignatura;
                 int cantidadPreguntas;
                 cout << "Nombre del Examen: ";
@@ -269,34 +339,51 @@ int main() {
                 cin >> cantidadPreguntas;
                 cin.ignore();
 
-                if (examen) {
-                    delete examen;
-                }
-                examen = new Examen(nombre, asignatura, cantidadPreguntas);
-                // Guardamos inmediatamente el examen vacío en el archivo TXT.
-                guardarExamenEnArchivoTXT(*examen);
+                Examen* nuevoExamen = new Examen(nombre, asignatura, cantidadPreguntas);
+                examenes[numExamenes++] = nuevoExamen;
+                
+                // Generamos el nombre del archivo a partir del nombre del examen.
+                string nombreArchivo = formatearNombreArchivo(nombre);
+                guardarExamenEnArchivoTXT(*nuevoExamen, nombreArchivo);
+
+                cout << "Examen '" << nombre << "' creado y guardado en '" 
+                     << nombreArchivo << "'." << endl;
                 break;
             }
             case 2: { // Cargar examen desde archivo TXT
-                if (examen) {
-                    delete examen;
-                    examen = nullptr;
+                string listaArchivos[MAX_ARCHIVOS];
+                int numArchivos = listarArchivosExamenes(listaArchivos);
+                if (numArchivos == 0) {
+                    cout << "No se encontraron archivos de exámenes." << endl;
+                    break;
                 }
-                examen = cargarExamenDesdeTXT("Preguntas.txt");
-                if (examen)
-                    cout << "\nExamen cargado desde TXT." << endl;
+                cout << "\nArchivos de exámenes disponibles:" << endl;
+                for (int i = 0; i < numArchivos; i++) {
+                    cout << i << ". " << listaArchivos[i] << endl;
+                }
+                int indiceArchivo;
+                cout << "Ingrese el número del archivo a cargar: ";
+                cin >> indiceArchivo;
+                cin.ignore();
+                if (indiceArchivo < 0 || indiceArchivo >= numArchivos) {
+                    cout << "Índice de archivo no válido." << endl;
+                    break;
+                }
+                Examen* examenCargado = cargarExamenDesdeTXT(listaArchivos[indiceArchivo]);
+                if (examenCargado) {
+                    examenes[numExamenes++] = examenCargado;
+                    cout << "\nExamen cargado desde '" << listaArchivos[indiceArchivo] << "'." << endl;
+                }
                 break;
             }
             case 3: { // Añadir pregunta
-                if (!examen) {
-                    cout << "Primero cree un examen." << endl;
-                    break;
-                }
-                string enunciado, solucion;
-                int nivelBloom, tiempo, puntaje;
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                Examen* examenSeleccionado = examenes[idx];
+
                 int tipoPregunta;
                 do {
-                    cout << "Tipo de Pregunta:" << endl;
+                    cout << "\nTipo de Pregunta:" << endl;
                     cout << "1 = Verdadero/Falso" << endl;
                     cout << "2 = Selección Múltiple" << endl;
                     cout << "3 = Respuesta Corta" << endl;
@@ -304,6 +391,9 @@ int main() {
                     cin >> tipoPregunta;
                     cin.ignore();
                 } while (tipoPregunta < 1 || tipoPregunta > 3);
+
+                int nivelBloom, tiempo, puntaje;
+                string enunciado, solucion;
 
                 cout << "Nivel de Taxonomía de Bloom (0-5): ";
                 cin >> nivelBloom;
@@ -331,103 +421,96 @@ int main() {
                 else if (tipoPregunta == 3)
                     nuevaPregunta = new PreguntaRC(nivelBloom, tiempo, enunciado, solucion, puntaje);
 
-                examen->agregarPregunta(nuevaPregunta);
-                // Actualizamos el archivo TXT con el examen modificado.
-                guardarExamenEnArchivoTXT(*examen);
+                examenSeleccionado->agregarPregunta(nuevaPregunta);
+
+                // Guarda el examen modificado con su nombre formateado.
+                string nombreArchivo = formatearNombreArchivo(examenSeleccionado->getNombre());
+                guardarExamenEnArchivoTXT(*examenSeleccionado, nombreArchivo);
                 break;
             }
             case 4: { // Actualizar pregunta
-                if (!examen) {
-                    cout << "No hay examen creado." << endl;
-                    break;
-                }
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                Examen* examenSeleccionado = examenes[idx];
 
-                cout << "\nEstas son las preguntas disponibles:\n";
-                examen->mostrarPreguntas();
-
+                cout << "\nEstas son las preguntas disponibles:" << endl;
+                examenSeleccionado->mostrarPreguntas();
                 int id;
                 cout << "\nIngrese el ID de la pregunta a actualizar: ";
                 cin >> id;
                 cin.ignore();
 
-                examen->actualizarPregunta(id);
-                guardarExamenEnArchivoTXT(*examen);
+                examenSeleccionado->actualizarPregunta(id);
+                string nombreArchivo = formatearNombreArchivo(examenSeleccionado->getNombre());
+                guardarExamenEnArchivoTXT(*examenSeleccionado, nombreArchivo);
                 break;
             }
-
             case 5: { // Borrar pregunta
-                if (!examen) {
-                    cout << "No hay examen creado." << endl;
-                    break;
-                }
-                cout << "\nEstas son las preguntas disponibles:\n";
-                examen->mostrarPreguntas();
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                Examen* examenSeleccionado = examenes[idx];
 
-                char confirmacion;
+                cout << "\nEstas son las preguntas disponibles:" << endl;
+                examenSeleccionado->mostrarPreguntas();
                 int id;
+                char confirmacion;
                 cout << "\nID de la pregunta a borrar: ";
                 cin >> id;
-                cout << "\n¿Está seguro de que desea borrar el ítem ("<< id <<")? (S/N): ";
+                cout << "\n¿Está seguro de que desea borrar el ítem (" << id << ")? (S/N): ";
                 cin >> confirmacion;
                 if (toupper(confirmacion) != 'S') {
                     cout << "Operación cancelada." << endl;
                     break;
                 }
                 cin.ignore();
-                examen->borrarPregunta(id);
-                guardarExamenEnArchivoTXT(*examen);
+                examenSeleccionado->borrarPregunta(id);
+                string nombreArchivo = formatearNombreArchivo(examenSeleccionado->getNombre());
+                guardarExamenEnArchivoTXT(*examenSeleccionado, nombreArchivo);
                 break;
             }
             case 6: { // Consultar información de una pregunta
-                if (!examen) {
-                    cout << "No hay examen creado." << endl;
-                    break;
-                }
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                Examen* examenSeleccionado = examenes[idx];
                 int id;
                 cout << "ID de la pregunta a consultar: ";
                 cin >> id;
                 cin.ignore();
-                examen->consultarPregunta(id);
+                examenSeleccionado->consultarPregunta(id);
                 break;
             }
             case 7: { // Filtrar preguntas por nivel
-                if (!examen) {
-                    cout << "No hay examen creado." << endl;
-                    break;
-                }
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                Examen* examenSeleccionado = examenes[idx];
                 int nivel;
                 cout << "Nivel de Bloom a filtrar (0-5): ";
                 cin >> nivel;
                 cin.ignore();
-                examen->filtrarPreguntas(nivel);
+                examenSeleccionado->filtrarPreguntas(nivel);
                 break;
             }
             case 8: { // Mostrar evaluación
-                if (!examen) {
-                    cout << "No hay examen creado." << endl;
-                    break;
-                }
-                examen->mostrarExamen();
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                examenes[idx]->mostrarExamen();
                 break;
             }
             case 9: { // Mostrar preguntas
-                if (!examen) {
-                    cout << "No hay examen creado." << endl;
-                    break;
-                }
-                examen->mostrarPreguntas();
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                examenes[idx]->mostrarPreguntas();
                 break;
             }
             case 10: { // Guardar examen a archivo TXT (opción explícita)
-                if (!examen) {
-                    cout << "No hay examen creado." << endl;
-                    break;
-                }
-                guardarExamenEnArchivoTXT(*examen);
+                int idx = seleccionarExamen(examenes, numExamenes);
+                if (idx == -1) break;
+                string nombreArchivo = formatearNombreArchivo(examenes[idx]->getNombre());
+                guardarExamenEnArchivoTXT(*examenes[idx], nombreArchivo);
                 break;
             }
             case 11: {
-                 cout << "Que tenga una buena jornada. Adiós." << endl;
+                cout << "Que tenga una buena jornada. Adiós." << endl;
                 break;
             }
             default: {
@@ -437,6 +520,9 @@ int main() {
         }
     } while (opcion != 11);
 
-    delete examen;
+    // Liberamos la memoria ocupada por los exámenes
+    for (int i = 0; i < numExamenes; i++) {
+        delete examenes[i];
+    }
     return 0;
 }

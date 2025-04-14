@@ -1,0 +1,10 @@
+Preguntas
+
+"enunciado": "2+2=4",
+"id":19,
+"nivelBloom":1,
+"puntaje":1,
+"solucion": "V",
+"tiempoEstimado":1,
+"tipo": "V"
+
