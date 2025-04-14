@@ -222,7 +222,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
       if (pregunta) {
                 pregunta->setId(id);                      
                 examen->agregarPregunta(pregunta);
-                cout << "Cargada pregunta ID " << id << ": " << enunciado << endl;
+                cout << "\nCargada pregunta ID " << id << ": " << enunciado << endl;
             }
         } 
 
