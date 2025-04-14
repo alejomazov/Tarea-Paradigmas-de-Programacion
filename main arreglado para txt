@@ -341,28 +341,37 @@ int main() {
                     cout << "No hay examen creado." << endl;
                     break;
                 }
+
+                cout << "\nEstas son las preguntas disponibles:\n";
+                examen->mostrarPreguntas();
+
                 int id;
-                cout << "ID de la pregunta a actualizar: ";
+                cout << "\nIngrese el ID de la pregunta a actualizar: ";
                 cin >> id;
                 cin.ignore();
+
                 examen->actualizarPregunta(id);
                 guardarExamenEnArchivoTXT(*examen);
                 break;
             }
+           
             case 5: { // Borrar pregunta
                 if (!examen) {
                     cout << "No hay examen creado." << endl;
                     break;
                 }
+                cout << "\nEstas son las preguntas disponibles:\n";
+                examen->mostrarPreguntas();
+
                 char confirmacion;
-                cout << "¿Está seguro de que desea borrar el ítem? (S/N): ";
+                cout << "\n¿Está seguro de que desea borrar el ítem? (S/N): ";
                 cin >> confirmacion;
                 if (toupper(confirmacion) != 'S') {
                     cout << "Operación cancelada." << endl;
                     break;
                 }
                 int id;
-                cout << "ID de la pregunta a borrar: ";
+                cout << "\nID de la pregunta a borrar: ";
                 cin >> id;
                 cin.ignore();
                 examen->borrarPregunta(id);
