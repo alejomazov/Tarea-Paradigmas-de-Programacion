@@ -99,8 +99,7 @@ Examen* cargarExamenDesdeTXT(const string &nombreArchivo = "Preguntas.txt") {
             continue;
 
         string enunciado, solucion, tipo;
-        int id = 0, nivelBloom = 0, puntaje = 0, tiempoEstimado = 0;
-        std::cout << "Id: " << id << std::endl;
+        int id, nivelBloom = 0, puntaje = 0, tiempoEstimado = 0;
         
         // 1. Línea: enunciado
         {
@@ -419,6 +418,7 @@ int main() {
                 break;
             }
             case 11: {
+                 cout << "Que tenga una buena jornada. Adiós." << endl;
                 break;
             }
             default: {
